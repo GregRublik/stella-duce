@@ -94,6 +94,6 @@ AI создаст детальный план с этапами
 
 По вопросам и предложениям:
 
-Email: grigorashekivanov2@gmail.com
-GitHub Issues: Создать issue
-Пусть ваши цели будут достигнуты под руководством звезды! ✨
+- Email: grigorashekivanov2@gmail.com
+- GitHub Issues: Создать issue
+- Пусть ваши цели будут достигнуты под руководством звезды! ✨
