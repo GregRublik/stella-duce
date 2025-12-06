@@ -29,7 +29,7 @@ class RabbitSettings(BaseSettings):
     host: str
     port: int
 
-    queues: QueueSettings
+    # queues: QueueSettings
 
     @property
     def url(self) -> str:
@@ -68,3 +68,8 @@ class Settings(BaseSettings):
     )
 
 templates = Jinja2Templates(directory="src/templates")
+
+settings = Settings(
+    db=DbSettings(),
+    rabbitmq=RabbitSettings(),
+)
