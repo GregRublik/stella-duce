@@ -52,7 +52,7 @@ class DbSettings(BaseSettings):
 
     @property
     def dsn_asyncpg(self):
-        return f"postgresql+asyncpg://{self.db_user}:{self.db_pass}@{self.db_host}:{self.db_port}/{self.db_name}"
+        return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
 
 class Settings(BaseSettings):
     port: int
