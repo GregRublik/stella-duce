@@ -61,8 +61,8 @@ class GoalStage(Base):
         cascade="all, delete-orphan"
     )
     progress_records = relationship("UserStageProgress", back_populates="stage", cascade="all, delete-orphan")
-    calendar_events = relationship("CalendarEvent", back_populates="stage", cascade="all, delete-orphan")
-    history = relationship("StageHistory", back_populates="stage", cascade="all, delete-orphan")
+    # calendar_events = relationship("CalendarEvent", back_populates="stage", cascade="all, delete-orphan")
+    # history = relationship("StageHistory", back_populates="stage", cascade="all, delete-orphan")
 
     # Технические поля
     created_at = Column(DateTime, server_default=func.now(), nullable=False)

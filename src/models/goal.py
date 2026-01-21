@@ -45,7 +45,7 @@ class Goal(Base):
 
     # Связи с другими таблицами
     stages = relationship("GoalStage", back_populates="goal", cascade="all, delete-orphan")
-    conversations = relationship("LLMConversation", back_populates="goal", cascade="all, delete-orphan")
+    # conversations = relationship("LLMConversation", back_populates="goal", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Goal(id={self.id}, title='{self.title[:30]}...', status='{self.status}')>"

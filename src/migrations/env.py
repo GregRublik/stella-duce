@@ -12,7 +12,7 @@ from models.goal import Goal  # noqa
 from models.user import User  # noqa
 from models.goal_stage import GoalStage  # noqa
 from models.stage_dependency import StageDependency  # noqa
-from models.user_stage_progress import UserStageProgress  #noqa
+from models.user_stage_progress import UserStageProgress  # noqa
 
 
 from db.database import Base
