@@ -1,6 +1,9 @@
 from aiohttp import ClientSession
 from pydantic_settings import SettingsConfigDict, BaseSettings
 from fastapi.templating import Jinja2Templates
+from pathlib import Path
+
+from constance import constants
 
 
 class SessionManager:
@@ -20,8 +23,10 @@ class SessionManager:
             await cls._session.close()
             cls._session = None
 
+
 class QueueSettings(BaseSettings):
     pass
+
 
 class RabbitSettings(BaseSettings):
     user: str
@@ -41,6 +46,15 @@ class RabbitSettings(BaseSettings):
         extra="ignore"
     )
 
+
+class AuthSettings(BaseSettings):
+
+    public_key: Path = constants.BASE_DIR / 'public_key.pem'
+    private_key: Path = constants.BASE_DIR / 'private_key.pem'
+
+    model_config = SettingsConfigDict(env_prefix="AUTH_", env_file=".env", extra="ignore")
+
+
 class DbSettings(BaseSettings):
     host: str
     user: str
@@ -58,6 +72,7 @@ class Settings(BaseSettings):
     port: int
     host: str
 
+    auth: AuthSettings
     db: DbSettings
     rabbitmq: RabbitSettings
 
@@ -72,4 +87,5 @@ templates = Jinja2Templates(directory="src/templates")
 settings = Settings(
     db=DbSettings(),
     rabbitmq=RabbitSettings(),
+    auth=AuthSettings(),
 )

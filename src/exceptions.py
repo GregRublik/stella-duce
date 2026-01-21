@@ -1,0 +1,18 @@
+class ModelAlreadyExistsException(BaseException):
+    """Объект уже существует"""
+
+class ModelNoFoundException(BaseException):
+    """Объект не найден"""
+
+class ModelMultipleResultsFoundException(BaseException):
+    """При ожидании одного объекта нашлось несколько экземпляров"""
+
+class UserNoFoundException(ModelNoFoundException):
+    """Пользователь не найден"""
+
+    detail = "User no found with this email"
+
+class UserAlreadyExistsException(ModelAlreadyExistsException):
+    """Пользователь уже существует"""
+
+    detail = "User already exists with this email"
