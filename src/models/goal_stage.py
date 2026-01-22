@@ -29,7 +29,7 @@ class GoalStage(Base):
     detailed_instructions = Column(Text)  # Подробные инструкции от ИИ
 
     # Статус и прогресс
-    status = Column(Enum(StageStatus), default=StageStatus.NOT_STARTED, nullable=False)
+    status = Column(Enum(StageStatus, name='stage_status'), default=StageStatus.NOT_STARTED, nullable=False)
     progress_percentage = Column(Integer, default=0)  # 0-100%
     is_milestone = Column(Boolean, default=False)  # Является ли ключевой вехой
     order_index = Column(Integer, default=0)  # Порядковый номер в roadmap

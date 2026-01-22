@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Boolean, DateTime, String
+from sqlalchemy import Column, Integer, Boolean, DateTime, String, LargeBinary
 from sqlalchemy_utils import EmailType
 from sqlalchemy.sql import func
 from db.database import Base
@@ -11,6 +11,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     email = Column(EmailType, unique=True, nullable=False)
+    password = Column(LargeBinary, nullable=False)
     is_active = Column(Boolean, default=True)
 
     created_at = Column(DateTime, server_default=func.now(), nullable=False)

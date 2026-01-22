@@ -4,6 +4,7 @@ import jwt
 from config import settings
 from constance import constants
 from models.user import User
+import bcrypt
 
 class AuthService:
 
@@ -54,6 +55,13 @@ class AuthService:
             private_key=settings.auth.private_key.read_text(),
         )
 
+    @staticmethod
+    def hash_password(
+            password: str,
+    ) -> bytes:
+        salt = bcrypt.gensalt()
+        pwd_bytes: bytes = password.encode()
+        return bcrypt.hashpw(pwd_bytes, salt)
 
     async def get_tokens(self, user: User):
 

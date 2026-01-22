@@ -1,4 +1,6 @@
 import sys
+
+sys.path.append("src/")
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -6,13 +8,12 @@ from sqlalchemy import pool
 from src.config import settings
 from alembic import context
 
-sys.path.append("src/")
 
-from models.goal import Goal  # noqa
+# from models.goal import Goal  # noqa
 from models.user import User  # noqa
-from models.goal_stage import GoalStage  # noqa
-from models.stage_dependency import StageDependency  # noqa
-from models.user_stage_progress import UserStageProgress  # noqa
+# from models.goal_stage import GoalStage  # noqa
+# from models.stage_dependency import StageDependency  # noqa
+# from models.user_stage_progress import UserStageProgress  # noqa
 
 
 from db.database import Base
