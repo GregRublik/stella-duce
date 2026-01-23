@@ -16,3 +16,13 @@ class UserAlreadyExistsException(ModelAlreadyExistsException):
     """Пользователь уже существует"""
 
     detail = "User already exists with this email"
+
+class TokenUserNoFoundException(ModelNoFoundException):
+    """Токен не найден в бд"""
+
+    detail = "Token user no found"
+
+class TokenUserAlreadyExistsException(ModelAlreadyExistsException):
+    """Токен уже существует"""
+
+    detail = "Token user already exists with this user"

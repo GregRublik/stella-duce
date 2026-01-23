@@ -34,17 +34,17 @@ class Goal(Base):
     target_date = Column(DateTime)  # Планируемая дата завершения
     completed_at = Column(DateTime)  # Фактическая дата завершения
 
-    # Метаданные ИИ
-    ai_model_used = Column(String(100))  # Какая модель ИИ использовалась
-    ai_summary = Column(Text)  # Краткое резюме от ИИ
-    ai_confidence = Column(Integer)  # Уверенность ИИ в плане (0-100)
+    # # Метаданные ИИ
+    # ai_model_used = Column(String(100))  # Какая модель ИИ использовалась
+    # ai_summary = Column(Text)  # Краткое резюме от ИИ
+    # ai_confidence = Column(Integer)  # Уверенность ИИ в плане (0-100)
 
     # Технические поля
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Связи с другими таблицами
-    stages = relationship("GoalStage", back_populates="goal", cascade="all, delete-orphan")
+    # stages = relationship("GoalStage", back_populates="goal", cascade="all, delete-orphan")
     # conversations = relationship("LLMConversation", back_populates="goal", cascade="all, delete-orphan")
 
     def __repr__(self):

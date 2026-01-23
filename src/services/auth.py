@@ -1,15 +1,48 @@
+import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Literal, Dict, Any, Optional
+from typing import Literal, Dict, Any, Optional, Union
 import jwt
+from pydantic import UUID4
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from config import settings
 from constance import constants
-from models.user import User
+from models.user import User, TokenUser
 import bcrypt
+from schemas.token import TokenUserCreate, TokenUserUpdate
+
+from repositories.base import SQLAlchemyRepository
+from repositories.token import TokenUserRepository
+from exceptions import (
+    TokenUserAlreadyExistsException,
+    ModelAlreadyExistsException,
+    TokenUserNoFoundException,
+    ModelNoFoundException
+)
+
 
 class AuthService:
 
+    def __init__(self, repository: Union[SQLAlchemyRepository, TokenUserRepository], session: AsyncSession):
+        self.repository = repository
+        self.session = session
+
     @staticmethod
-    async def encode_jwt(
+    def decode_jwt(
+            token: str,
+            public_key: str = settings.jwt.public_key_path.read_text(),
+            algorithm: str = settings.jwt.algorithm,
+    ) -> dict:
+        decoded = jwt.decode(
+            token,
+            public_key,
+            algorithms=[algorithm],
+        )
+        return decoded
+
+    @staticmethod
+    def encode_jwt(
             payload: Dict[str, Any],
             expire_minutes: int,
             private_key: str,
@@ -42,30 +75,59 @@ class AuthService:
 
     async def create_token(self, user: User, type_token: Literal['access', 'refresh']) -> str:
 
-        if type_token == 'access':
-            expire_time = constants.auth.EXPIRE_ACCESS_TOKEN
-        else:
-            expire_time = constants.auth.EXPIRE_REFRESH_TOKEN
+        types = {'access': constants.auth.EXPIRE_ACCESS_TOKEN, 'refresh': constants.auth.EXPIRE_REFRESH_TOKEN}
 
-        return await self.encode_jwt(
+        token_id = uuid.uuid4()
+
+        token = self.encode_jwt(
             {
                 'sub': user.id,
+                'jti': token_id,
             },
-            expire_time,
+            types[type_token],
             private_key=settings.auth.private_key.read_text(),
         )
 
+        if type_token == 'refresh':
+            hashed_token = self.hashing(token)
+            token_data = TokenUserCreate(id=token_id, user_id=user.id, token_hash=hashed_token).model_dump()
+            await self.repository.add_one(self.session, token_data)
+        return token
+
     @staticmethod
-    def hash_password(
-            password: str,
+    def hashing(
+            hashing_string: str,
     ) -> bytes:
         salt = bcrypt.gensalt()
-        pwd_bytes: bytes = password.encode()
+        pwd_bytes: bytes = hashing_string.encode()
         return bcrypt.hashpw(pwd_bytes, salt)
 
-    async def get_tokens(self, user: User):
+    async def validate_refresh_token(self, token: str, user_id: int) -> bool:
+        try:
 
-        access = await self.create_token(user, type_token="access")
-        refresh = await self.create_token(user, type_token="refresh")
+            token_db = await self.repository.get_by_user_id(self.session, user_id)
+            if token_db.token_hash == self.hashing(token):
+                return True
+            return False
 
-        return access, refresh
+        except TokenUserNoFoundException:
+            return False
+
+    async def add_token_user(self, token: TokenUserCreate) -> TokenUser:
+        try:
+            return await self.repository.add_one(self.session, token.model_dump())
+        except ModelAlreadyExistsException:
+            raise TokenUserAlreadyExistsException
+
+
+    async def update_by_id(self, token: TokenUserUpdate) -> TokenUser:
+        try:
+            return await self.repository.update_by_id(self.session, token)
+        except NoResultFound:
+            raise TokenUserNoFoundException
+
+    async def deactivate_token_user(self, token_id: UUID4) -> TokenUser:
+        try:
+            return await self.repository.change_one(self.session, token_id, {'is_active': False})
+        except ModelNoFoundException:
+            raise TokenUserNoFoundException

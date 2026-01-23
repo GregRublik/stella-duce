@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
+
+from pydantic import UUID4
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
 from sqlalchemy.exc import IntegrityError, NoResultFound, MultipleResultsFound
 
 from exceptions import ModelAlreadyExistsException, ModelNoFoundException, ModelMultipleResultsFoundException
@@ -39,6 +41,15 @@ class SQLAlchemyRepository(AbstractRepository):
         except IntegrityError:
             raise ModelAlreadyExistsException
 
+    async def change_one(self, session: AsyncSession, object_id: int | UUID4, data: dict):
+        stmt = update(self.model).where(self.model.id == object_id).values(**data)
+        try:
+            res = await session.execute(stmt)
+            await session.commit()
+            return res.scalar_one()
+        except NoResultFound:
+            raise ModelNoFoundException
+
     async def get_all(self, session: AsyncSession):
         stmt = select(self.model)
         try:
@@ -47,7 +58,7 @@ class SQLAlchemyRepository(AbstractRepository):
         except NoResultFound:
             raise ModelNoFoundException
 
-    async def get_by_id(self, session: AsyncSession, object_id: int):
+    async def get_by_id(self, session: AsyncSession, object_id: int | UUID4):
         stmt = select(self.model).where(self.model.id == object_id).limit(1)
         try:
             res = await session.execute(stmt)

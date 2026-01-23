@@ -11,7 +11,8 @@ from exceptions import UserNoFoundException, UserAlreadyExistsException
 from fastapi.responses import Response
 from config import settings, templates
 
-router = APIRouter()
+router = APIRouter(tags=["auth"], prefix="/auth")
+
 
 @router.post("/login")
 async def auth_login(
@@ -21,8 +22,10 @@ async def auth_login(
         response: Response,
 ):
     try:
-        user_db = await user_service.get_user(user)
-        access, refresh = await auth_service.get_tokens(user_db)
+        user_db = await user_service.get_user_by_login(user)
+
+        access = await auth_service.create_token(user_db, 'access')
+        refresh = await auth_service.create_token(user_db, 'refresh')
 
         response.set_cookie(constants.auth.REFRESH_TOKEN_NAME, refresh)
         response.set_cookie(constants.auth.ACCESS_TOKEN_NAME, access)
@@ -42,12 +45,14 @@ async def register(
         auth_service: Annotated[AuthService, Depends(get_auth_service)],
         response: Response
 ):
-    user.password = auth_service.hash_password(user.password)
+    user.password = auth_service.hashing(user.password)
 
     try:
 
         new_user = await user_service.add_user(user)
-        access, refresh = await auth_service.get_tokens(new_user)
+
+        access = await auth_service.create_token(new_user, 'access')
+        refresh = await auth_service.create_token(new_user, 'refresh')
 
         response.set_cookie(constants.auth.REFRESH_TOKEN_NAME, refresh)
         response.set_cookie(constants.auth.ACCESS_TOKEN_NAME, access)

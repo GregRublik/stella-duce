@@ -29,8 +29,14 @@ class UserService:
         except ModelAlreadyExistsException:
             raise UserAlreadyExistsException
 
-    async def get_user(self, user: UserLogin) -> User:
+    async def get_user_by_login(self, user: UserLogin) -> User:
         try:
             return await self.repository.get_by_email(self.session, user)
+        except ModelNoFoundException:
+            raise UserNoFoundException
+
+    async def get_user_by_id(self, user_id: int) -> User:
+        try:
+            return await self.repository.get_by_id(self.session, user_id)
         except ModelNoFoundException:
             raise UserNoFoundException
