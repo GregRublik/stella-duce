@@ -3,7 +3,7 @@ from pydantic import UUID4
 
 
 class TokenUserCreate(BaseModel):
-    id: UUID4
+    id: str
     user_id: int
     token_hash: bytes
 

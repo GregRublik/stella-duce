@@ -42,7 +42,7 @@ class SQLAlchemyRepository(AbstractRepository):
             raise ModelAlreadyExistsException
 
     async def change_one(self, session: AsyncSession, object_id: int | UUID4, data: dict):
-        stmt = update(self.model).where(self.model.id == object_id).values(**data)
+        stmt = update(self.model).where(self.model.id == object_id).values(**data).returning(self.model)
         try:
             res = await session.execute(stmt)
             await session.commit()

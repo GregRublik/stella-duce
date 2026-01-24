@@ -1,8 +1,11 @@
-from sqlalchemy import Column, Integer, Boolean, DateTime, String, LargeBinary, ForeignKey
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, Integer, Boolean, DateTime, String, LargeBinary, ForeignKey, UUID
 from sqlalchemy_utils import EmailType
 from sqlalchemy.sql import func
 from db.database import Base
 import uuid
+import time
 
 from sqlalchemy.orm import relationship
 
@@ -24,8 +27,21 @@ class User(Base):
 class TokenUser(Base):
     __tablename__ = 'tokens_users'
 
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
-    token_hash = Column(String, nullable=False, unique=True, index=True)  # Хэш токена
-    is_active = Column(Boolean, default=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
 
+    token_hash = Column(LargeBinary, nullable=False, unique=True, index=True)
+
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
+
+    rotated_at = Column(DateTime(timezone=True), nullable=True)
+
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+
+    @property
+    def is_expired(self) -> bool:
+        return datetime.now(timezone.utc) >= self.expires_at

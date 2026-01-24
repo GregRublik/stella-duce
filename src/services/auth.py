@@ -1,8 +1,10 @@
 import uuid
 from datetime import datetime, timedelta, timezone
+import time
 from typing import Literal, Dict, Any, Optional, Union
 import jwt
-from pydantic import UUID4
+import hashlib
+from uuid import UUID
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,13 +33,14 @@ class AuthService:
     @staticmethod
     def decode_jwt(
             token: str,
-            public_key: str = settings.jwt.public_key_path.read_text(),
-            algorithm: str = settings.jwt.algorithm,
+            public_key: str = settings.auth.public_key.read_text(),
+            algorithm: str = constants.auth.ALGORITHM,
     ) -> dict:
         decoded = jwt.decode(
             token,
             public_key,
             algorithms=[algorithm],
+            options={"verify_sub": False}
         )
         return decoded
 
@@ -72,43 +75,78 @@ class AuthService:
 
         return encoded
 
+    async def create_token(
+            self,
+            user: User,
+            type_token: Literal['access', 'refresh']
+    ) -> str:
 
-    async def create_token(self, user: User, type_token: Literal['access', 'refresh']) -> str:
-
-        types = {'access': constants.auth.EXPIRE_ACCESS_TOKEN, 'refresh': constants.auth.EXPIRE_REFRESH_TOKEN}
+        expires_map = {
+            'access': constants.auth.EXPIRE_ACCESS_TOKEN,
+            'refresh': constants.auth.EXPIRE_REFRESH_TOKEN,
+        }
 
         token_id = uuid.uuid4()
+        expires_delta = expires_map[type_token]
 
         token = self.encode_jwt(
             {
                 'sub': user.id,
-                'jti': token_id,
+                'jti': str(token_id),
             },
-            types[type_token],
+            expires_delta,
             private_key=settings.auth.private_key.read_text(),
         )
 
         if type_token == 'refresh':
-            hashed_token = self.hashing(token)
-            token_data = TokenUserCreate(id=token_id, user_id=user.id, token_hash=hashed_token).model_dump()
+            hashed_token = self.hashing_token(token)
+
+            token_data = {
+                'id': token_id,
+                'user_id': user.id,
+                'token_hash': hashed_token,
+                'expires_at': datetime.now(timezone.utc) + + timedelta(seconds=expires_delta)
+
+            }
+
             await self.repository.add_one(self.session, token_data)
+
         return token
 
     @staticmethod
-    def hashing(
+    def hashing_password(
             hashing_string: str,
     ) -> bytes:
         salt = bcrypt.gensalt()
         pwd_bytes: bytes = hashing_string.encode()
         return bcrypt.hashpw(pwd_bytes, salt)
 
-    async def validate_refresh_token(self, token: str, user_id: int) -> bool:
-        try:
+    @staticmethod
+    def hashing_token(
+            token: str,
+    ) -> bytes:
+        """Хеширование токена для хранения в БД"""
+        # Используем SHA-256, у него нет ограничения на длину
+        return hashlib.sha256(token.encode()).digest()
 
-            token_db = await self.repository.get_by_user_id(self.session, user_id)
-            if token_db.token_hash == self.hashing(token):
+    async def validate_refresh_token(self, token: str, token_id: str) -> bool:
+        try:
+            token_db = await self.repository.get_by_id(self.session, UUID(token_id))
+
+            if token_db.is_expired:
+                return False
+
+            if token_db.token_hash != self.hashing_token(token):
+                return False
+
+            # Если токен ещё не использовался
+            if token_db.rotated_at is None:
                 return True
-            return False
+
+            # Если использован — проверяем grace-period
+            grace_deadline = token_db.rotated_at + timedelta(seconds=constants.auth.REFRESH_GRACE_SECONDS)
+
+            return datetime.now(timezone.utc) <= grace_deadline
 
         except TokenUserNoFoundException:
             return False
@@ -126,8 +164,19 @@ class AuthService:
         except NoResultFound:
             raise TokenUserNoFoundException
 
-    async def deactivate_token_user(self, token_id: UUID4) -> TokenUser:
+    async def deactivate_token_user(self, token_id: UUID) -> TokenUser:
         try:
             return await self.repository.change_one(self.session, token_id, {'is_active': False})
         except ModelNoFoundException:
             raise TokenUserNoFoundException
+
+    async def rotate_refresh_token(self, token_id: UUID) -> None:
+        try:
+            await self.repository.change_one(
+                self.session,
+                token_id,
+                {'rotated_at': datetime.now(timezone.utc)},
+            )
+        except ModelNoFoundException:
+            raise TokenUserNoFoundException
+

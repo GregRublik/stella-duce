@@ -8,6 +8,7 @@ class AuthConstants:
 
     EXPIRE_ACCESS_TOKEN: int = 30
     EXPIRE_REFRESH_TOKEN: int = 43200
+    REFRESH_GRACE_SECONDS: int = 10
 
     ALGORITHM: str = "RS256"
 

@@ -4,7 +4,7 @@ from starlette import status
 from constance import constants
 from schemas.auth import UserLogin, UserCreate
 from depends import get_auth_service, get_user_service
-from typing import Annotated
+from typing import Annotated, List, Literal
 from services.auth import AuthService
 from services.user import UserService
 from exceptions import UserNoFoundException, UserAlreadyExistsException
@@ -45,7 +45,7 @@ async def register(
         auth_service: Annotated[AuthService, Depends(get_auth_service)],
         response: Response
 ):
-    user.password = auth_service.hashing(user.password)
+    user.password = auth_service.hashing_password(user.password)
 
     try:
 

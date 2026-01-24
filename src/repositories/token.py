@@ -12,7 +12,7 @@ class TokenUserRepository(SQLAlchemyRepository):
     async def get_by_user_id(self, session: AsyncSession, user_id) -> TokenUser:
         stmt = (
             select(self.model)
-            .where(self.model.user_id == user_id)
+            .where(self.model.user_id == user_id, self.model.is_active == True)
             .limit(1)
         )
         try:
