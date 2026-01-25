@@ -24,8 +24,8 @@ async def auth_login(
     try:
         user_db = await user_service.get_user_by_login(user)
 
-        access = await auth_service.create_token(user_db, 'access')
-        refresh = await auth_service.create_token(user_db, 'refresh')
+        access = await auth_service.create_token(user_db.id, 'access')
+        refresh = await auth_service.create_token(user_db.id, 'refresh')
 
         response.set_cookie(constants.auth.REFRESH_TOKEN_NAME, refresh)
         response.set_cookie(constants.auth.ACCESS_TOKEN_NAME, access)
@@ -51,8 +51,8 @@ async def register(
 
         new_user = await user_service.add_user(user)
 
-        access = await auth_service.create_token(new_user, 'access')
-        refresh = await auth_service.create_token(new_user, 'refresh')
+        access = await auth_service.create_token(new_user.id, 'access')
+        refresh = await auth_service.create_token(new_user.id, 'refresh')
 
         response.set_cookie(constants.auth.REFRESH_TOKEN_NAME, refresh)
         response.set_cookie(constants.auth.ACCESS_TOKEN_NAME, access)

@@ -77,7 +77,7 @@ class AuthService:
 
     async def create_token(
             self,
-            user: User,
+            user_id: int,
             type_token: Literal['access', 'refresh']
     ) -> str:
 
@@ -91,7 +91,7 @@ class AuthService:
 
         token = self.encode_jwt(
             {
-                'sub': user.id,
+                'sub': user_id,
                 'jti': str(token_id),
             },
             expires_delta,
@@ -103,7 +103,7 @@ class AuthService:
 
             token_data = {
                 'id': token_id,
-                'user_id': user.id,
+                'user_id': user_id,
                 'token_hash': hashed_token,
                 'expires_at': datetime.now(timezone.utc) + + timedelta(seconds=expires_delta)
 

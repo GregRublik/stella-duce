@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from dependencies.auth import get_current_user
+from dependencies.user import get_current_user
 from models.user import User
 from typing import Annotated
 
