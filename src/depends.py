@@ -1,9 +1,13 @@
-from repositories.token import TokenUserRepository
-from services import user, auth
-from repositories.user import UserRepository
-from db.database import get_db_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
+
+from db.database import get_db_session
+
+from services import user, auth, goal
+
+from repositories.token import TokenUserRepository
+from repositories.user import UserRepository
+from repositories.goal import GoalRepository
 
 
 def get_user_repository() -> UserRepository:
@@ -11,6 +15,9 @@ def get_user_repository() -> UserRepository:
 
 def get_token_user_repository() -> TokenUserRepository:
     return TokenUserRepository()
+
+def get_goal_repository() -> GoalRepository:
+    return GoalRepository()
 
 def get_auth_service(
     session: AsyncSession = Depends(get_db_session),
@@ -25,3 +32,9 @@ def get_user_service(
     repository: UserRepository = Depends(get_user_repository)
 ) -> user.UserService:
     return user.UserService(repository, session)
+
+def get_goal_service(
+    session: AsyncSession = Depends(get_db_session),
+    repository: GoalRepository = Depends(get_goal_repository)
+) -> goal.GoalService:
+    return goal.GoalService(repository, session)

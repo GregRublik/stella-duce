@@ -26,3 +26,8 @@ class TokenUserAlreadyExistsException(ModelAlreadyExistsException):
     """Токен уже существует"""
 
     detail = "Token user already exists with this user"
+
+class GoalNoFoundException(ModelNoFoundException):
+    """У пользователя нет активных целей"""
+
+    detail = "Goal no found with this user"

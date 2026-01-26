@@ -21,6 +21,7 @@ class User(Base):
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
+    goals = relationship("Goal", back_populates="user", cascade="all, delete-orphan")
     # goals = relationship("Goal", back_populates="user", cascade="all, delete-orphan")
     # stage_progress = relationship("UserStageProgress", back_populates="user", cascade="all, delete-orphan")
 
