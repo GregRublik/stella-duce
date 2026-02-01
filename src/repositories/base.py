@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from pydantic import UUID4
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import insert, select, update
+from sqlalchemy import insert, select, update, delete
 from sqlalchemy.exc import IntegrityError, NoResultFound, MultipleResultsFound
 
 from exceptions import ModelAlreadyExistsException, ModelNoFoundException, ModelMultipleResultsFoundException
@@ -49,6 +49,27 @@ class SQLAlchemyRepository(AbstractRepository):
             return res.scalar_one()
         except NoResultFound:
             raise ModelNoFoundException
+
+    async def delete_by_id(
+        self,
+        session: AsyncSession,
+        object_id: int | UUID4
+    ):
+        stmt = (
+            delete(self.model)
+            .where(self.model.id == object_id)
+            .returning(self.model)
+        )
+
+        res = await session.execute(stmt)
+        await session.commit()
+
+        obj = res.scalar_one_or_none()
+
+        if obj is None:
+            raise ModelNoFoundException
+
+        return obj
 
     async def get_all(self, session: AsyncSession):
         stmt = select(self.model)

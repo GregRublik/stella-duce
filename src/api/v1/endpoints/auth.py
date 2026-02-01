@@ -1,3 +1,4 @@
+import bcrypt
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
@@ -9,6 +10,8 @@ from services.auth import AuthService
 from services.user import UserService
 from exceptions import UserNoFoundException, UserAlreadyExistsException
 from fastapi.responses import Response
+from exceptions import APIException
+from response import ok
 from config import settings, templates
 
 router = APIRouter(tags=["auth"], prefix="/auth")
@@ -24,17 +27,26 @@ async def auth_login(
     try:
         user_db = await user_service.get_user_by_login(user)
 
-        access = await auth_service.create_token(user_db.id, 'access')
-        refresh = await auth_service.create_token(user_db.id, 'refresh')
+        if await auth_service.validate_password(user.password, user_db.password):
 
-        response.set_cookie(constants.auth.REFRESH_TOKEN_NAME, refresh)
-        response.set_cookie(constants.auth.ACCESS_TOKEN_NAME, access)
+            access = await auth_service.create_token(user_db.id, 'access') # noqa
+            refresh = await auth_service.create_token(user_db.id, 'refresh')
 
-        return {"success": True, 'data': {'access_token': access, 'refresh_token': refresh}}
+            response.set_cookie(constants.auth.REFRESH_TOKEN_NAME, refresh)
+            response.set_cookie(constants.auth.ACCESS_TOKEN_NAME, access)
+
+            return ok({'access_token': access, 'refresh_token': refresh})
+
+        else:
+            raise APIException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                error="Invalid username or password."
+            )
+
     except UserNoFoundException as e:
-        raise HTTPException(
+        raise APIException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"success": False, "error": e.detail}
+            error=e.detail
         )
 
 
@@ -51,7 +63,7 @@ async def register(
 
         new_user = await user_service.add_user(user)
 
-        access = await auth_service.create_token(new_user.id, 'access')
+        access = await auth_service.create_token(new_user.id, 'access') # noqa
         refresh = await auth_service.create_token(new_user.id, 'refresh')
 
         response.set_cookie(constants.auth.REFRESH_TOKEN_NAME, refresh)
@@ -62,10 +74,10 @@ async def register(
         # secure=settings.jwt.secure_cookies,  # Куки будут передаваться только по HTTPS соединению.
         # samesite=settings.jwt.same_site  # Контролирует отправку кук при "меж сайтовых" запросах. (Strict|Lax|None)
 
-        return {"success": True, 'data': {'access_token': access, 'refresh_token': refresh}}
+        return ok({'access_token': access, 'refresh_token': refresh})
 
     except UserAlreadyExistsException as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail={"success": False, "error": e.detail}
+        raise APIException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            error=e.detail
         )

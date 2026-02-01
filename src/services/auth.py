@@ -122,6 +122,16 @@ class AuthService:
         return bcrypt.hashpw(pwd_bytes, salt)
 
     @staticmethod
+    async def validate_password(
+            password: str,
+            hashed_password: bytes,
+    ) -> bool:
+        return bcrypt.checkpw(
+            password=password.encode(),
+            hashed_password=hashed_password,
+        )
+
+    @staticmethod
     def hashing_token(
             token: str,
     ) -> bytes:

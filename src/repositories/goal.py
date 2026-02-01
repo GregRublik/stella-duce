@@ -11,7 +11,7 @@ from exceptions import ModelNoFoundException
 class GoalRepository(SQLAlchemyRepository):
     model = Goal
 
-    async def get_by_user_id(self, session: AsyncSession, user_id: int) -> List[Goal]:
+    async def get_by_user_id(self, session: AsyncSession, user_id: int):
         stmt = select(self.model).where(self.model.user_id == user_id)
 
         res = await session.execute(stmt)

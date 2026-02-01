@@ -28,6 +28,11 @@ class TokenUserAlreadyExistsException(ModelAlreadyExistsException):
     detail = "Token user already exists with this user"
 
 class GoalNoFoundException(ModelNoFoundException):
-    """У пользователя нет активных целей"""
+    """Цель не найдена в бд"""
 
-    detail = "Goal no found with this user"
+    detail = "Goal no found"
+
+class APIException(Exception):
+    def __init__(self, status_code: int, error: str):
+        self.status_code = status_code
+        self.error = error
