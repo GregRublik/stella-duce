@@ -6,46 +6,49 @@ from db.database import Base
 
 
 class GoalStatus(enum.Enum):
-    """Статусы цели"""
-    DRAFT = "draft"  # Черновик (обсуждается с ИИ)
-    PLANNING = "planning"  # Планирование (roadmap формируется)
-    ACTIVE = "active"  # Активная цель
-    PAUSED = "paused"  # Приостановлена
-    COMPLETED = "completed"  # Завершена
-    CANCELLED = "cancelled"  # Отменена
+    DRAFT = "draft"
+    ACTIVE = "active"
+    PAUSED = "paused"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
 
 
 class Goal(Base):
-    __tablename__ = 'goals'
+    __tablename__ = "goals"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
 
-    # Связь с пользователем
-    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    user = relationship("User", back_populates="goals")
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
 
-    # Основные поля
-    title = Column(String(500), nullable=False)  # Название цели
-    description = Column(Text)  # Подробное описание
-    status = Column(Enum(GoalStatus), default=GoalStatus.DRAFT, nullable=False)
-    priority = Column(Integer, default=1)  # Приоритет (1-10)
+    title = Column(String(500), nullable=False)
+    description = Column(Text)
 
-    # Даты
-    target_date = Column(DateTime)  # Планируемая дата завершения
-    completed_at = Column(DateTime)  # Фактическая дата завершения
+    status = Column(
+        Enum(GoalStatus, name="goal_status"),
+        default=GoalStatus.DRAFT,
+        nullable=False
+    )
 
-    # # Метаданные ИИ
-    # ai_model_used = Column(String(100))  # Какая модель ИИ использовалась
-    # ai_summary = Column(Text)  # Краткое резюме от ИИ
-    # ai_confidence = Column(Integer)  # Уверенность ИИ в плане (0-100)
+    priority = Column(Integer, default=1)
+    target_date = Column(DateTime)
+    completed_at = Column(DateTime)
 
-    # Технические поля
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(DateTime, server_default=func.now(),
+                        onupdate=func.now(), nullable=False)
 
-    # Связи с другими таблицами
-    # stages = relationship("GoalStage", back_populates="goal", cascade="all, delete-orphan")
-    # conversations = relationship("LLMConversation", back_populates="goal", cascade="all, delete-orphan")
+    # Связь со стадиями
+    stages = relationship(
+        "GoalStage",
+        back_populates="goal",
+        cascade="all, delete-orphan",
+        order_by="GoalStage.order_index"
+    )
 
     def __repr__(self):
-        return f"<Goal(id={self.id}, title='{self.title[:30]}...', status='{self.status}')>"
+        return f"<Goal(id={self.id}, title='{self.title[:30]}')>"

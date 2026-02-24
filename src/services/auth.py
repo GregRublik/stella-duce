@@ -1,20 +1,16 @@
 import uuid
 from datetime import datetime, timedelta, timezone
-import time
-from typing import Literal, Dict, Any, Optional, Union
+from typing import Literal, Dict, Any, Optional
 import jwt
 import hashlib
 from uuid import UUID
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from constance import constants
-from models.user import User, TokenUser
+from models.user import TokenUser
 import bcrypt
 from schemas.token import TokenUserCreate, TokenUserUpdate
-
-from repositories.base import SQLAlchemyRepository
 from repositories.token import TokenUserRepository
 from exceptions import (
     TokenUserAlreadyExistsException,
@@ -22,13 +18,14 @@ from exceptions import (
     TokenUserNoFoundException,
     ModelNoFoundException
 )
+from services.unit_of_work import UnitOfWork
 
 
 class AuthService:
 
-    def __init__(self, repository: Union[SQLAlchemyRepository, TokenUserRepository], session: AsyncSession):
+    def __init__(self, repository: TokenUserRepository, uow: UnitOfWork):
         self.repository = repository
-        self.session = session
+        self.uow = uow
 
     @staticmethod
     def decode_jwt(
@@ -109,7 +106,7 @@ class AuthService:
 
             }
 
-            await self.repository.add_one(self.session, token_data)
+            await self.repository.add_one(self.uow.session, token_data)
 
         return token
 
@@ -141,7 +138,7 @@ class AuthService:
 
     async def validate_refresh_token(self, token: str, token_id: str) -> bool:
         try:
-            token_db = await self.repository.get_by_id(self.session, UUID(token_id))
+            token_db = await self.repository.get_by_id(self.uow.session, UUID(token_id))
 
             if token_db.is_expired:
                 return False
@@ -158,32 +155,32 @@ class AuthService:
 
             return datetime.now(timezone.utc) <= grace_deadline
 
-        except TokenUserNoFoundException:
+        except ModelNoFoundException:
             return False
 
     async def add_token_user(self, token: TokenUserCreate) -> TokenUser:
         try:
-            return await self.repository.add_one(self.session, token.model_dump())
+            return await self.repository.add_one(self.uow.session, token.model_dump())
         except ModelAlreadyExistsException:
             raise TokenUserAlreadyExistsException
 
 
     async def update_by_id(self, token: TokenUserUpdate) -> TokenUser:
         try:
-            return await self.repository.update_by_id(self.session, token)
+            return await self.repository.update_by_id(self.uow.session, token)
         except NoResultFound:
             raise TokenUserNoFoundException
 
     async def deactivate_token_user(self, token_id: UUID) -> TokenUser:
         try:
-            return await self.repository.change_one(self.session, token_id, {'is_active': False})
+            return await self.repository.change_one(self.uow.session, token_id, {'is_active': False})
         except ModelNoFoundException:
             raise TokenUserNoFoundException
 
     async def rotate_refresh_token(self, token_id: UUID) -> None:
         try:
             await self.repository.change_one(
-                self.session,
+                self.uow.session,
                 token_id,
                 {'rotated_at': datetime.now(timezone.utc)},
             )
