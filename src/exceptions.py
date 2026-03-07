@@ -1,3 +1,5 @@
+from fastapi import status
+
 class ModelAlreadyExistsException(BaseException):
     """Объект уже существует"""
 
@@ -51,6 +53,7 @@ class InvalidStageDependencyException(ModelNoFoundException):
     """Стадии не найдены"""
 
     detail = "Invalid stage dependency. One or more stages do not exist."
+    status_code = status.HTTP_400_BAD_REQUEST
 
 class APIException(Exception):
     def __init__(self, status_code: int, error: str):

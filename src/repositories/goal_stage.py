@@ -8,8 +8,11 @@ class GoalStageRepository(SQLAlchemyRepository):
     model = GoalStage
 
     async def get_by_goal_id(self, session: AsyncSession, goal_id: int):
-        stmt = select(self.model).where(self.model.goal_id == goal_id)
-
+        stmt = (
+            select(self.model)
+            .where(self.model.goal_id == goal_id)
+            .order_by(self.model.order_index)
+        )
         res = await session.execute(stmt)
         return res.scalars().all()
 

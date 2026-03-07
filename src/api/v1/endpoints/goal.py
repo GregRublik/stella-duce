@@ -31,8 +31,14 @@ async def get_goal(
         user_id: Annotated[int, Depends(get_current_user_id)],
         goal_service: Annotated[GoalService, Depends(get_goal_service)]
 ):
-    goal = await goal_service.get_goal(user_id, goal_id)
-    return ok(goal)
+    try:
+        goal = await goal_service.get_goal(user_id, goal_id)
+        return ok(goal)
+    except GoalNoFoundException as e:
+        raise APIException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            error=e.detail
+        )
 
 
 @router.post("/goals", response_model=APIResponse[GoalResponse], status_code=status.HTTP_201_CREATED)

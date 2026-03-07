@@ -36,7 +36,6 @@ class SQLAlchemyRepository(AbstractRepository):
         stmt = insert(self.model).values(**data).returning(self.model)
         try:
             res = await session.execute(stmt)
-            # await session.commit()
             return res.scalar_one()
         except IntegrityError:
             raise ModelAlreadyExistsException
@@ -45,7 +44,6 @@ class SQLAlchemyRepository(AbstractRepository):
         stmt = update(self.model).where(self.model.id == object_id).values(**data).returning(self.model)
         try:
             res = await session.execute(stmt)
-            # await session.commit()
             return res.scalar_one()
         except NoResultFound:
             raise ModelNoFoundException
@@ -62,7 +60,6 @@ class SQLAlchemyRepository(AbstractRepository):
         )
 
         res = await session.execute(stmt)
-        # await session.commit()
 
         obj = res.scalar_one_or_none()
 

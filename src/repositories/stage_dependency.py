@@ -1,5 +1,5 @@
 from typing import List, Dict
-from sqlalchemy import insert
+from sqlalchemy import insert, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from repositories.base import SQLAlchemyRepository
@@ -17,4 +17,11 @@ class StageDependencyRepository(SQLAlchemyRepository):
             .returning(self.model)
         )
 
+        await session.execute(stmt)
+
+    async def delete_by_dependent(self, session: AsyncSession, stage_id: int
+    ):
+        stmt = delete(self.model).where(
+            self.model.dependent_stage_id == stage_id
+        )
         await session.execute(stmt)

@@ -3,8 +3,14 @@ from typing import Annotated
 
 from dependencies.user import get_current_user_id
 from depends import get_goal_stage_service
-from exceptions import GoalStageNoFoundException, APIException
-
+from exceptions import (
+    GoalStageNoFoundException,
+    APIException,
+    GoalStageAlreadyExistsException,
+    InvalidStageDependencyException,
+    GoalNoFoundException,
+    ForbiddenException
+)
 
 from schemas.response import APIResponse
 from services.goal_stage import GoalStageService
@@ -24,8 +30,14 @@ async def get_goal_stages(
         user_id: Annotated[int, Depends(get_current_user_id)],
         stage_service: Annotated[GoalStageService, Depends(get_goal_stage_service)]
 ):
-    stages = await stage_service.get_stages(user_id, goal_id)
-    return ok(stages)
+    try:
+        stages = await stage_service.get_stages(user_id, goal_id)
+        return ok(stages)
+    except (GoalNoFoundException, GoalStageNoFoundException) as e:
+        raise APIException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            error=e.detail
+        )
 
 
 @router.get("/goals/{goal_id}/stages/{stage_id}", response_model=APIResponse[GoalStageResponse])
@@ -35,19 +47,36 @@ async def get_goal_stage(
         user_id: Annotated[int, Depends(get_current_user_id)],
         stage_service: Annotated[GoalStageService, Depends(get_goal_stage_service)]
 ):
-    stage = await stage_service.get_stage(user_id, goal_id, stage_id)
-    return ok(stage)
+    try:
+        stage = await stage_service.get_stage(user_id, goal_id, stage_id)
+        return ok(stage)
+    except GoalStageNoFoundException as e:
+        raise APIException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            error=e.detail
+        )
 
 
 @router.post("/goals/{goal_id}/stages", response_model=APIResponse[GoalStageResponse], status_code=status.HTTP_201_CREATED)
 async def create_goal_stage(
         goal_id: int,
-        data_stage: CreateGoalStage,
+        stage_data: CreateGoalStage,
         user_id: Annotated[int, Depends(get_current_user_id)],
         stage_service: Annotated[GoalStageService, Depends(get_goal_stage_service)]
 ):
-    stage = await stage_service.add_stage(user_id, goal_id, data_stage)
-    return ok(stage)
+    try:
+        stage = await stage_service.add_stage(user_id, goal_id, stage_data)
+        return ok(stage)
+    except GoalStageAlreadyExistsException as e:
+        raise APIException(
+            status_code=status.HTTP_409_CONFLICT,
+            error=e.detail
+        )
+    except InvalidStageDependencyException as e:
+        raise APIException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            error=e.detail
+        )
 
 @router.patch("/goals/{goal_id}/stages/{stage_id}", response_model=APIResponse[GoalStageResponse])
 async def update_goal_stage(
@@ -75,8 +104,13 @@ async def delete_goal_stage(
 ):
     try:
         await stage_service.delete_one(user_id, goal_id, stage_id)
-    except GoalStageNoFoundException as e:
+    except (GoalNoFoundException, GoalStageNoFoundException) as e:
         raise APIException(
             status_code=status.HTTP_404_NOT_FOUND,
+            error=e.detail
+        )
+    except ForbiddenException as e:
+        raise APIException(
+            status_code=status.HTTP_403_FORBIDDEN,
             error=e.detail
         )

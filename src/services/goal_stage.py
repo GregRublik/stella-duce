@@ -12,7 +12,8 @@ from exceptions import (
     GoalStageAlreadyExistsException,
     ModelNoFoundException,
     ForbiddenException,
-    InvalidStageDependencyException
+    InvalidStageDependencyException,
+    GoalNoFoundException
 )
 
 from schemas.goal_stage import GoalStageResponse, CreateGoalStage
@@ -38,7 +39,7 @@ class GoalStageService:
         goal = await self.goal_repository.get_by_id(self.uow.session, goal_id)
 
         if not goal:
-            raise ModelNoFoundException
+            raise GoalNoFoundException
 
         if goal.user_id != user_id:
             raise ForbiddenException
@@ -56,14 +57,39 @@ class GoalStageService:
 
             return await self.repository.get_by_goal_id(self.uow.session, goal_id)
 
+        except GoalNoFoundException:
+            raise
         except ModelNoFoundException:
             raise GoalStageNoFoundException
 
-    async def add_stage(self, user_id: int, goal_id: int, data_stage: CreateGoalStage) -> GoalStage:
+    async def get_stage(self, user_id: int, goal_id: int, stage_id: int) -> GoalStageResponse:
+        try:
+            await self._check_goal_owner(user_id, goal_id)
+
+            stage = await self.repository.get_by_id(
+                self.uow.session,
+                stage_id
+            )
+            if stage.goal_id != goal_id:
+                raise GoalStageNoFoundException
+            return stage
+        except ModelNoFoundException:
+            raise GoalStageNoFoundException
+
+    async def delete_one(self, user_id: int, goal_id: int, stage_id: int):
+        try:
+            await self._check_goal_owner(user_id, goal_id)
+            async with self.uow:
+                await self.repository.delete_by_id(self.uow.session, stage_id)
+        except ModelNoFoundException:
+            raise GoalStageNoFoundException
+
+    async def add_stage(self, user_id: int, goal_id: int, stage_data: CreateGoalStage) -> GoalStage:
+        await self._check_goal_owner(user_id, goal_id)
         try:
             async with self.uow:
 
-                data_dict = data_stage.model_dump(exclude_unset=True)
+                data_dict = stage_data.model_dump(exclude_unset=True)
                 dependency_ids = data_dict.pop("dependency_ids", [])
                 data_dict["goal_id"] = goal_id
                 stage = await self.repository.add_one(self.uow.session, data_dict)
@@ -71,9 +97,10 @@ class GoalStageService:
                 # проверяем существование стадий
                 if dependency_ids:
 
-                    stages = await self.repository.get_by_ids(
+                    stages = await self.repository.get_by_ids_and_goal(
                         self.uow.session,
-                        dependency_ids
+                        dependency_ids,
+                        goal_id
                     )
 
                     found_ids = {s.id for s in stages}
@@ -99,4 +126,65 @@ class GoalStageService:
 
         except ModelAlreadyExistsException:
             raise GoalStageAlreadyExistsException
+
+    async def change_stage(
+            self,
+            user_id: int,
+            goal_id: int,
+            stage_id: int,
+            stage_data
+    ) -> GoalStage:
+
+        async with self.uow:
+
+            await self._check_goal_owner(user_id, goal_id)
+
+            data_dict = stage_data.model_dump(exclude_unset=True)
+            dependency_ids = data_dict.pop("dependency_ids", None)
+
+            stage = await self.repository.change_one(
+                self.uow.session,
+                stage_id,
+                data_dict
+            )
+
+            if stage.goal_id != goal_id:
+                raise GoalStageNoFoundException
+
+            # если dependencies не переданы — не меняем их
+            if dependency_ids is not None:
+
+                stages = await self.repository.get_by_ids(
+                    self.uow.session,
+                    dependency_ids
+                )
+
+                found_ids = {s.id for s in stages}
+
+                missing = set(dependency_ids) - found_ids
+
+                if missing:
+                    raise InvalidStageDependencyException
+
+                # удаляем старые зависимости
+                await self.stage_dependency_repository.delete_by_dependent(
+                    self.uow.session,
+                    stage_id
+                )
+
+                deps = [
+                    {
+                        "prerequisite_stage_id": dep_id,
+                        "dependent_stage_id": stage_id
+                    }
+                    for dep_id in dependency_ids
+                ]
+
+                if deps:
+                    await self.stage_dependency_repository.add_many(
+                        self.uow.session,
+                        deps
+                    )
+
+            return stage
 

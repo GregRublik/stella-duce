@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from starlette import status
+from fastapi import status
 
 from constance import constants
 from schemas.auth import UserLogin, UserCreate
