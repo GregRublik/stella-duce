@@ -2,12 +2,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 
 from db.database import get_db_session
+from models.stage_dependency import StageDependency
 
-from services import user, auth, goal, unit_of_work
+from services import user, auth, goal, unit_of_work, goal_stage
 
 from repositories.token import TokenUserRepository
 from repositories.user import UserRepository
 from repositories.goal import GoalRepository
+from repositories.goal_stage import GoalStageRepository
+from repositories.stage_dependency import StageDependencyRepository
+from services.goal_stage import GoalStageService
 
 
 def get_user_repository() -> UserRepository:
@@ -18,6 +22,12 @@ def get_token_user_repository() -> TokenUserRepository:
 
 def get_goal_repository() -> GoalRepository:
     return GoalRepository()
+
+def get_goal_stage_repository() -> GoalStageRepository:
+    return GoalStageRepository()
+
+def get_stage_dependency_repository() -> StageDependencyRepository:
+    return StageDependencyRepository()
 
 def get_uow_service(
     session: AsyncSession = Depends(get_db_session),
@@ -43,3 +53,11 @@ def get_user_service(
     repository: UserRepository = Depends(get_user_repository)
 ) -> user.UserService:
     return user.UserService(repository, uow)
+
+def get_goal_stage_service(
+    uow: unit_of_work.UnitOfWork = Depends(get_uow_service),
+    repository: GoalStageRepository = Depends(get_goal_stage_repository),
+    goal_repository: GoalRepository = Depends(get_goal_repository),
+    stage_dependency_repository: StageDependencyRepository = Depends(get_stage_dependency_repository)
+) -> goal_stage.GoalStageService:
+    return goal_stage.GoalStageService(repository, goal_repository, stage_dependency_repository, uow)

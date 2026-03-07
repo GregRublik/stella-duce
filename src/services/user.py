@@ -20,8 +20,8 @@ class UserService:
         user_dict = user.model_dump()
 
         try:
-            new_user = await self.repository.add_one(self.uow.session, user_dict)
-            return new_user
+            async with self.uow:
+                return await self.repository.add_one(self.uow.session, user_dict)
         except ModelAlreadyExistsException:
             raise UserAlreadyExistsException
 

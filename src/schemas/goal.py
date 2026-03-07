@@ -11,7 +11,6 @@ class GoalResponse(BaseModel):
     description: str
     status: str
     priority: Optional[int] = None
-    # user_id: int
     target_date: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     created_at: datetime
@@ -29,12 +28,7 @@ class CreateGoalDB(CreateGoal):
     user_id: int
 
 class UpdateGoal(CreateGoal):
-    id: int
     title: Optional[str] = None
-    description: Optional[str] = None
     status: Optional[GoalStatus] = None
     target_date: Optional[datetime] = None
     priority: Optional[int] = None
-
-class DeleteGoal(BaseModel):
-    id: int

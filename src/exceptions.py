@@ -32,6 +32,26 @@ class GoalNoFoundException(ModelNoFoundException):
 
     detail = "Goal no found"
 
+class GoalStageNoFoundException(ModelNoFoundException):
+    """Стадия не найдена в бд"""
+
+    detail = "Goal stage no found"
+
+class GoalStageAlreadyExistsException(ModelAlreadyExistsException):
+    """Стадия уже существует"""
+
+    detail = "Goal stage already exists"
+
+class ForbiddenException(BaseException):
+    """Нет доступа"""
+
+    detail = "Forbidden"
+
+class InvalidStageDependencyException(ModelNoFoundException):
+    """Стадии не найдены"""
+
+    detail = "Invalid stage dependency. One or more stages do not exist."
+
 class APIException(Exception):
     def __init__(self, status_code: int, error: str):
         self.status_code = status_code

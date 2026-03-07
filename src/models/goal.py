@@ -24,6 +24,7 @@ class Goal(Base):
         nullable=False,
         index=True
     )
+    user = relationship("User", back_populates="goals")
 
     title = Column(String(500), nullable=False)
     description = Column(Text)

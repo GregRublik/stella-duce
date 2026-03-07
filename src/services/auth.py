@@ -105,8 +105,8 @@ class AuthService:
                 'expires_at': datetime.now(timezone.utc) + + timedelta(seconds=expires_delta)
 
             }
-
-            await self.repository.add_one(self.uow.session, token_data)
+            async with self.uow:
+                await self.repository.add_one(self.uow.session, token_data)
 
         return token
 
@@ -160,7 +160,8 @@ class AuthService:
 
     async def add_token_user(self, token: TokenUserCreate) -> TokenUser:
         try:
-            return await self.repository.add_one(self.uow.session, token.model_dump())
+            async with self.uow:
+                return await self.repository.add_one(self.uow.session, token.model_dump())
         except ModelAlreadyExistsException:
             raise TokenUserAlreadyExistsException
 
@@ -173,17 +174,19 @@ class AuthService:
 
     async def deactivate_token_user(self, token_id: UUID) -> TokenUser:
         try:
-            return await self.repository.change_one(self.uow.session, token_id, {'is_active': False})
+            async with self.uow:
+                return await self.repository.change_one(self.uow.session, token_id, {'is_active': False})
         except ModelNoFoundException:
             raise TokenUserNoFoundException
 
     async def rotate_refresh_token(self, token_id: UUID) -> None:
         try:
-            await self.repository.change_one(
-                self.uow.session,
-                token_id,
-                {'rotated_at': datetime.now(timezone.utc)},
-            )
+            async with self.uow:
+                await self.repository.change_one(
+                    self.uow.session,
+                    token_id,
+                    {'rotated_at': datetime.now(timezone.utc)},
+                )
         except ModelNoFoundException:
             raise TokenUserNoFoundException
 

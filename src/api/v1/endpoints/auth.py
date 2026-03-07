@@ -1,20 +1,18 @@
-import bcrypt
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from starlette import status
 
 from constance import constants
 from schemas.auth import UserLogin, UserCreate
 from depends import get_auth_service, get_user_service
-from typing import Annotated, List, Literal
+from typing import Annotated
 from services.auth import AuthService
 from services.user import UserService
 from exceptions import UserNoFoundException, UserAlreadyExistsException
 from fastapi.responses import Response
 from exceptions import APIException
 from response import ok
-from config import settings, templates
 
-router = APIRouter(tags=["auth"], prefix="/auth")
+router = APIRouter(tags=["Auth"], prefix="/auth")
 
 
 @router.post("/login")

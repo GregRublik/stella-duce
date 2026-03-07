@@ -6,6 +6,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import enum
 from db.database import Base
+from models.stage_dependency import StageDependency
 
 
 class StageStatus(enum.Enum):
@@ -59,7 +60,7 @@ class GoalStage(Base):
     # Зависимости
     dependencies = relationship(
         "StageDependency",
-        foreign_keys="StageDependency.dependent_stage_id",
+        foreign_keys=[StageDependency.dependent_stage_id],  # ✅ не строка
         back_populates="dependent_stage",
         cascade="all, delete-orphan"
     )
