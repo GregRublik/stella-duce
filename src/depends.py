@@ -2,20 +2,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 
 from db.database import get_db_session
-from models.stage_dependency import StageDependency
+from repositories.otp import OTPRepository
 
-from services import user, auth, goal, unit_of_work, goal_stage
+from services import user, auth, goal, unit_of_work, goal_stage, otp, notification
 
 from repositories.token import TokenUserRepository
 from repositories.user import UserRepository
 from repositories.goal import GoalRepository
 from repositories.goal_stage import GoalStageRepository
 from repositories.stage_dependency import StageDependencyRepository
-from services.goal_stage import GoalStageService
 
 
+# REPOSITORIES
 def get_user_repository() -> UserRepository:
     return UserRepository()
+
+def get_otp_repository() -> OTPRepository:
+    return OTPRepository()
 
 def get_token_user_repository() -> TokenUserRepository:
     return TokenUserRepository()
@@ -29,11 +32,12 @@ def get_goal_stage_repository() -> GoalStageRepository:
 def get_stage_dependency_repository() -> StageDependencyRepository:
     return StageDependencyRepository()
 
+
+# SERVICES
 def get_uow_service(
     session: AsyncSession = Depends(get_db_session),
 ) -> unit_of_work.UnitOfWork:
     return unit_of_work.UnitOfWork(session)
-
 
 def get_auth_service(
     uow: unit_of_work.UnitOfWork = Depends(get_uow_service),
@@ -41,12 +45,22 @@ def get_auth_service(
 ) -> auth.AuthService:
     return auth.AuthService(repository, uow)
 
+def get_otp_service(
+    uow: unit_of_work.UnitOfWork = Depends(get_uow_service),
+    repository: OTPRepository = Depends(get_otp_repository),
+) -> otp.OTPService:
+    return otp.OTPService(repository, uow)
+
+def get_notification_service(
+
+) -> notification.NotificationService:
+    return notification.NotificationService()
+
 def get_goal_service(
     uow: unit_of_work.UnitOfWork = Depends(get_uow_service),
     repository: GoalRepository = Depends(get_goal_repository)
 ) -> goal.GoalService:
     return goal.GoalService(repository, uow)
-
 
 def get_user_service(
     uow: unit_of_work.UnitOfWork = Depends(get_uow_service),

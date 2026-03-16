@@ -3,9 +3,11 @@ from fastapi import status
 
 from constance import constants
 from schemas.auth import UserLogin, UserCreate
-from depends import get_auth_service, get_user_service
+from depends import get_auth_service, get_user_service, get_otp_service, get_notification_service
 from typing import Annotated
 from services.auth import AuthService
+from services.notification import NotificationService
+from services.otp import OTPService
 from services.user import UserService
 from exceptions import UserNoFoundException, UserAlreadyExistsException
 from fastapi.responses import Response
@@ -53,6 +55,8 @@ async def register(
         user: UserCreate,
         user_service: Annotated[UserService, Depends(get_user_service)],
         auth_service: Annotated[AuthService, Depends(get_auth_service)],
+        otp_service: Annotated[OTPService, Depends(get_otp_service)],
+        notification_service: Annotated[NotificationService, Depends(get_notification_service)],
         response: Response
 ):
     user.password = auth_service.hashing_password(user.password)
@@ -60,12 +64,18 @@ async def register(
     try:
 
         new_user = await user_service.add_user(user)
+        new_otp = await otp_service.add_otp(new_user)
+
+        await notification_service.send_notification(new_user, new_otp, type_notification="email")
+
 
         access = await auth_service.create_token(new_user.id, 'access') # noqa
         refresh = await auth_service.create_token(new_user.id, 'refresh')
 
         response.set_cookie(constants.auth.REFRESH_TOKEN_NAME, refresh)
         response.set_cookie(constants.auth.ACCESS_TOKEN_NAME, access)
+
+
 
         # TODO Надо правильно настроить хранение токенов
         # httponly=True,  # Запрещает доступ к кукам через JavaScript (через document.cookie).
