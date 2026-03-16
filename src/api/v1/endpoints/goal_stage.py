@@ -38,6 +38,11 @@ async def get_goal_stages(
             status_code=status.HTTP_404_NOT_FOUND,
             error=e.detail
         )
+    except ForbiddenException as e:
+        raise APIException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            error=e.detail
+        )
 
 
 @router.get("/goals/{goal_id}/stages/{stage_id}", response_model=APIResponse[GoalStageResponse])
@@ -53,6 +58,11 @@ async def get_goal_stage(
     except GoalStageNoFoundException as e:
         raise APIException(
             status_code=status.HTTP_404_NOT_FOUND,
+            error=e.detail
+        )
+    except ForbiddenException as e:
+        raise APIException(
+            status_code=status.HTTP_403_FORBIDDEN,
             error=e.detail
         )
 
@@ -75,6 +85,11 @@ async def create_goal_stage(
     except InvalidStageDependencyException as e:
         raise APIException(
             status_code=status.HTTP_400_BAD_REQUEST,
+            error=e.detail
+        )
+    except ForbiddenException as e:
+        raise APIException(
+            status_code=status.HTTP_403_FORBIDDEN,
             error=e.detail
         )
 

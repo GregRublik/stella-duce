@@ -1,13 +1,18 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer, Boolean, DateTime, String, LargeBinary, ForeignKey, UUID
+from sqlalchemy import Column, Integer, Boolean, DateTime, LargeBinary, ForeignKey, UUID, Enum
 from sqlalchemy_utils import EmailType
 from sqlalchemy.sql import func
 from db.database import Base
 import uuid
-import time
+import enum
 
 from sqlalchemy.orm import relationship
+
+
+class UserStatus(enum.Enum):
+    PENDING = "pending"
+    VERIFIED = "verified"
 
 
 class User(Base):
@@ -18,12 +23,16 @@ class User(Base):
     password = Column(LargeBinary, nullable=False)
     is_active = Column(Boolean, default=True)
 
+    status = Column(
+        Enum(UserStatus, name="user_status"),
+        default=UserStatus.PENDING,
+        nullable=False
+    )
+
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
     goals = relationship("Goal", back_populates="user", cascade="all, delete-orphan")
-    # goals = relationship("Goal", back_populates="user", cascade="all, delete-orphan")
-    # stage_progress = relationship("UserStageProgress", back_populates="user", cascade="all, delete-orphan")
 
 class TokenUser(Base):
     __tablename__ = 'tokens_users'

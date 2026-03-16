@@ -45,6 +45,44 @@ class GoalStageService:
             raise ForbiddenException
 
     @staticmethod
+    def _build_graph(deps):
+        graph = {}
+
+        for prereq, dep in deps:
+            graph.setdefault(prereq, []).append(dep)
+
+        return graph
+
+    @staticmethod
+    def _creates_cycle(
+            graph: dict[int, list[int]],
+            start: int,
+            target: int
+    ) -> bool:
+        """
+        Проверка: появится ли цикл если добавить start -> target
+        """
+
+        visited = set()
+
+        def dfs(node: int):
+            if node == start:
+                return True
+
+            if node in visited:
+                return False
+
+            visited.add(node)
+
+            for nxt in graph.get(node, []):
+                if dfs(nxt):
+                    return True
+
+            return False
+
+        return dfs(target)
+
+    @staticmethod
     def is_stage_ready(stage: GoalStage) -> bool:
         return all(
             dep.prerequisite_stage.status == StageStatus.COMPLETED
@@ -85,6 +123,7 @@ class GoalStageService:
             raise GoalStageNoFoundException
 
     async def add_stage(self, user_id: int, goal_id: int, stage_data: CreateGoalStage) -> GoalStage:
+
         await self._check_goal_owner(user_id, goal_id)
         try:
             async with self.uow:
@@ -110,13 +149,17 @@ class GoalStageService:
                     if missing:
                         raise InvalidStageDependencyException
 
-                    deps = [
-                        {
-                            "prerequisite_stage_id": dep_id,
-                            "dependent_stage_id": stage.id
-                        }
-                        for dep_id in dependency_ids
-                    ]
+                    deps = await self.stage_dependency_repository.get_graph_by_goal(
+                        self.uow.session,
+                        goal_id
+                    )
+
+                    graph = self._build_graph(deps)
+
+                    for dep_id in dependency_ids:
+
+                        if self._creates_cycle(graph, dep_id, stage.id):
+                            raise InvalidStageDependencyException
 
                     await self.stage_dependency_repository.add_many(
                         self.uow.session,
