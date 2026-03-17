@@ -6,11 +6,14 @@ from repositories.otp import OTPRepository
 
 from services import user, auth, goal, unit_of_work, goal_stage, otp, notification
 
+from config import settings
+
 from repositories.token import TokenUserRepository
 from repositories.user import UserRepository
 from repositories.goal import GoalRepository
 from repositories.goal_stage import GoalStageRepository
 from repositories.stage_dependency import StageDependencyRepository
+from services.notification import NotificationService
 
 
 # REPOSITORIES
@@ -45,16 +48,21 @@ def get_auth_service(
 ) -> auth.AuthService:
     return auth.AuthService(repository, uow)
 
+def get_notification_service() -> notification.NotificationService:
+    return notification.NotificationService(
+        settings.notification.username,
+        settings.notification.password.get_secret_value(),
+        settings.notification.from_who,
+        settings.notification.port,
+        settings.notification.server,
+    )
+
 def get_otp_service(
     uow: unit_of_work.UnitOfWork = Depends(get_uow_service),
     repository: OTPRepository = Depends(get_otp_repository),
+    notification_service: NotificationService = Depends(get_notification_service),
 ) -> otp.OTPService:
-    return otp.OTPService(repository, uow)
-
-def get_notification_service(
-
-) -> notification.NotificationService:
-    return notification.NotificationService()
+    return otp.OTPService(repository, uow, notification_service)
 
 def get_goal_service(
     uow: unit_of_work.UnitOfWork = Depends(get_uow_service),

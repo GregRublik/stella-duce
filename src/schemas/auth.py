@@ -1,9 +1,15 @@
 from pydantic import BaseModel, EmailStr, field_validator
+from pydantic_extra_types.phone_numbers import PhoneNumber
+from typing import Literal
 import re
 
-
-class UserCreate(BaseModel):
+class UserEmail(BaseModel):
     email: EmailStr
+
+class UserPhone(BaseModel):
+    phone: PhoneNumber
+
+class UserCreate(UserEmail):
     password: str | bytes
 
     @field_validator('password')
@@ -36,6 +42,16 @@ class UserCreate(BaseModel):
 
         return v
 
-class UserLogin(BaseModel):
-    email: EmailStr
+class UserLogin(UserEmail):
     password: str
+
+class UserLoginOtp(UserEmail):
+    pass
+
+class UserVerifyEmailOtp(UserEmail):
+    otp_code: str
+    type: Literal["email", "sms"]
+
+class UserVerifySmsOtp(UserPhone):
+    otp_code: str
+    type: Literal["email", "sms"]

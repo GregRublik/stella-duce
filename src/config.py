@@ -1,4 +1,5 @@
 from aiohttp import ClientSession
+from pydantic import EmailStr, SecretStr
 from pydantic_settings import SettingsConfigDict, BaseSettings
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
@@ -55,6 +56,16 @@ class AuthSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="AUTH_", env_file=".env", extra="ignore")
 
 
+class NotificationSettings(BaseSettings):
+    username: str
+    password: SecretStr
+    from_who: EmailStr
+    port: int
+    server: str
+
+    model_config = SettingsConfigDict(env_prefix="MAIL_", env_file=".env", extra="ignore")
+
+
 class DbSettings(BaseSettings):
     host: str
     user: str
@@ -75,6 +86,7 @@ class Settings(BaseSettings):
     auth: AuthSettings
     db: DbSettings
     rabbitmq: RabbitSettings
+    notification: NotificationSettings
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -88,4 +100,5 @@ settings = Settings(
     db=DbSettings(),
     rabbitmq=RabbitSettings(),
     auth=AuthSettings(),
+    notification=NotificationSettings(),
 )

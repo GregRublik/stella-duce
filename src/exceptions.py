@@ -14,6 +14,11 @@ class UserNoFoundException(ModelNoFoundException):
 
     detail = "User no found with this email"
 
+class OtpCodeNoFoundException(ModelNoFoundException):
+    """Otp код не найден"""
+
+    detail = "Otp code no found"
+
 class UserAlreadyExistsException(ModelAlreadyExistsException):
     """Пользователь уже существует"""
 

@@ -24,7 +24,11 @@ class User(Base):
     is_active = Column(Boolean, default=True)
 
     status = Column(
-        Enum(UserStatus, name="user_status"),
+        Enum(
+            UserStatus,
+            name="user_status",
+            values_callable=lambda enum: [e.value for e in enum]
+        ),
         default=UserStatus.PENDING,
         nullable=False
     )
