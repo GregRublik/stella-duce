@@ -35,6 +35,9 @@ class GoalStage(Base):
     description = Column(Text)
     detailed_instructions = Column(Text)
 
+    latitude = Column(Float)
+    longitude = Column(Float)
+
     # Статус
     status = Column(
         Enum(StageStatus, name="stage_status"),

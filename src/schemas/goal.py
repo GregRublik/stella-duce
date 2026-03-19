@@ -8,7 +8,7 @@ class GoalResponse(BaseModel):
     # Порядок объявления полей определяет порядок в JSON
     id: int
     title: str
-    description: str
+    description: Optional[str] = None
     status: str
     priority: Optional[int] = None
     target_date: Optional[datetime] = None

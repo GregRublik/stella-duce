@@ -66,6 +66,7 @@ class OTPService:
         async with self.uow:
             new_otp = await self.add_otp(user, otp_type)
 
+            print(new_otp)
 
             otp_message = MessageSchema(
                 subject="Your OTP",
@@ -73,6 +74,7 @@ class OTPService:
                 body=f"<b>Your OTP code: {new_otp}</b>",
                 subtype=MessageType.plain
             )
+
             await self.notification_service.send_email_notification(otp_message)
 
     async def verify(self, user: User, otp_code: str) -> bool:

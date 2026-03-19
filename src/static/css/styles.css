@@ -1,0 +1,67 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background: #0f172a;
+    color: white;
+    margin: 0;
+}
+
+.container {
+    max-width: 400px;
+    margin: 100px auto;
+    background: #1e293b;
+    padding: 30px;
+    border-radius: 12px;
+}
+
+input, button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: none;
+}
+
+input {
+    background: #0f172a;
+    color: white;
+}
+
+button {
+    background: #6366f1;
+    color: white;
+    cursor: pointer;
+}
+
+.card {
+    background: #e3e7ef;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 40px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    user-select: none;
+}
+
+textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    background: #0f172a;
+    color: white;
+    margin-top: 10px;
+}

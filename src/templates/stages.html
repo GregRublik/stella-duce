@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block head %}
+<style>
+#canvas {
+    width: 100vw;
+    height: 100vh;
+    background: #0f172a;
+    position: relative;
+    overflow: hidden;
+}
+
+.node {
+    position: absolute;
+    background: #6366f1;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: grab;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+{% include "navbar.html" %}
+
+<div id="canvas"></div>
+
+<script src="static/js/api.js"></script>
+<script src="static/js/stages.js"></script>
+{% endblock %}

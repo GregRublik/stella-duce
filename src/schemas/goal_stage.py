@@ -23,6 +23,10 @@ class GoalStageResponse(BaseModel):
     actual_start_date: Optional[datetime] = None
     actual_end_date: Optional[datetime] = None
 
+    # Координаты
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
     # Оценочные параметры
     estimated_duration_hours: Optional[float] = None
     difficulty_level: Optional[int] = Field(default=None, ge=1, le=5)

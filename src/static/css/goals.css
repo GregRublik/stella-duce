@@ -1,0 +1,118 @@
+/* static/css/goals-layout.css */
+.goals-page {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+    max-width: 1200px;
+    margin: 100px auto;
+    padding: 0 30px;
+}
+
+.goals-list-section {
+    flex: 1;
+    background: #1e293b;
+    padding: 30px;
+    border-radius: 12px;
+}
+
+.goals-list-section h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.goal-editor-section {
+    flex: 1;
+    background: #1e293b;
+    padding: 30px;
+    border-radius: 12px;
+}
+
+.goal-editor-section h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: white;
+}
+
+#goals-list {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* Стили для карточек целей в списке */
+.goal-item {
+    background: #0f172a;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.goal-item:hover {
+    background: #2d3a5e;
+}
+
+.goal-item.selected {
+    background: #6366f1;
+}
+
+.goal-item h3 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+}
+
+.goal-item p {
+    margin: 0;
+    font-size: 14px;
+    color: #94a3b8;
+}
+
+.goal-item.selected p {
+    color: #e2e8f0;
+}
+
+/* Стили для формы редактирования */
+#edit-title,
+#edit-description {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #0f172a;
+    background: #0f172a;
+    color: white;
+    margin-bottom: 10px;
+    font-family: 'Inter', sans-serif;
+}
+
+#edit-description {
+    min-height: 150px;
+    resize: vertical;
+}
+
+.editor-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.editor-buttons button {
+    flex: 1;
+}
+
+.btn-secondary {
+    background: #475569 !important;
+}
+
+.btn-secondary:hover {
+    background: #64748b !important;
+}
+
+/* Кнопка создания новой цели */
+.btn-create {
+    background: #10b981;
+    margin-bottom: 20px;
+}
+
+.btn-create:hover {
+    background: #059669;
+}

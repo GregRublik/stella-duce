@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block head %}
+<link rel="stylesheet" href="static/css/styles.css">
+<link rel="stylesheet" href="static/css/navbar.css">
+<link rel="stylesheet" href="static/css/goals-layout.css">
+{% include "navbar.html" %}
+{% endblock %}
+
+{% block body %}
+<div class="goals-page">
+    <!-- Левая колонка: список целей -->
+    <div class="goals-list-section">
+        <h2>My Goals</h2>
+        <button class="btn-create" onclick="createNewGoal()">+ New Goal</button>
+        <div id="goals-list"></div>
+    </div>
+
+    <!-- Правая колонка: редактор цели -->
+    <div class="goal-editor-section">
+        <h2>Edit Goal</h2>
+        <input type="text" id="edit-title" placeholder="Goal title">
+        <textarea id="edit-description" placeholder="Goal description"></textarea>
+        <div class="editor-buttons">
+            <button onclick="saveGoal()">Save Changes</button>
+            <button class="btn-secondary" onclick="deleteGoal()">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script src="static/js/api.js"></script>
+<script src="static/js/goals.js"></script>
+{% endblock %}

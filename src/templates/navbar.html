@@ -1,0 +1,28 @@
+<nav class="navbar">
+    <div class="nav-container">
+
+        <!-- ЛОГО -->
+        <div class="logo">
+            <a href="/">🌟 Stella Duce</a>
+        </div>
+
+        <!-- ССЫЛКИ -->
+        <div class="nav-links">
+            <a href="/goals">Goals</a>
+            <a href="/calendar">Calendar</a>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="nav-actions">
+            {% if user %}
+            <span style="margin-right:10px;">👤 {{ user.email }}</span>
+            <a href="/logout" class="btn-outline">Quit</a>
+            {% else %}
+            <a href="/login" class="btn-outline">Login</a>
+            <a href="/register" class="btn-primary">Sign Up</a>
+            {% endif %}
+        </div>
+</div>
+
+    </div>
+</nav>

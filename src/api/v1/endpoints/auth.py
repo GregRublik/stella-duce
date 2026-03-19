@@ -16,7 +16,7 @@ from fastapi.responses import Response
 from exceptions import APIException
 from response import ok
 
-router = APIRouter(tags=["Auth"], prefix="/auth")
+router = APIRouter(tags=["Auth"])
 
 
 @router.post("/login-otp")

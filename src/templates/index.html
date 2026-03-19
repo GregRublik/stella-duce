@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block head %}
+<link rel="stylesheet" href="static/css/styles.css">
+<link rel="stylesheet" href="static/css/navbar.css">
+<style>
+.hero {
+    text-align: center;
+    padding: 100px 20px;
+}
+
+.hero h1 {
+    font-size: 48px;
+    font-weight: bold;
+}
+
+.hero p {
+    font-size: 18px;
+    color: #94a3b8;
+    margin-top: 20px;
+}
+
+.features {
+    margin-top: 80px;
+}
+
+.feature-card {
+    background: #1e293b;
+    padding: 25px;
+    border-radius: 12px;
+    height: 100%;
+}
+
+.feature-card h5 {
+    margin-bottom: 10px;
+}
+
+.cta {
+    margin-top: 60px;
+    text-align: center;
+}
+</style>
+{% include "navbar.html" %}
+{% endblock head %}
+
+{% block body %}
+
+<div class="cont">
+
+    <!-- HERO -->
+    <div class="hero">
+        <h1>🌟 Stella Duce</h1>
+        <h5>
+            Под руководством звезды — достигай своих целей с помощью искусственного интеллекта.
+        </h5>
+
+    </div>
+
+    <!-- FEATURES -->
+    <div class="row features g-4">
+
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h5>🤖 AI-планирование</h5>
+                <p>
+                    Обсуждай свои цели с AI и получай реалистичные пошаговые планы.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h5>🧩 Интерактивная карта</h5>
+                <p>
+                    Визуализируй путь к цели в виде roadmap с этапами и зависимостями.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h5>📈 Прогресс</h5>
+                <p>
+                    Отслеживай выполнение задач и анализируй свои достижения.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h5>📅 Календарь</h5>
+                <p>
+                    Планируй этапы по времени и следи за дедлайнами.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h5>🔗 Связи задач</h5>
+                <p>
+                    Настраивай зависимости между этапами как в профессиональных системах.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="feature-card">
+                <h5>⚡ Гибкость</h5>
+                <p>
+                    Меняй план в любой момент и адаптируйся к новым условиям.
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock body %}
