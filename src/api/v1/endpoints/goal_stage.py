@@ -11,7 +11,6 @@ from exceptions import (
     GoalNoFoundException,
     ForbiddenException
 )
-
 from schemas.response import APIResponse
 from services.goal_stage import GoalStageService
 from response import ok, UnifiedResponseRoute

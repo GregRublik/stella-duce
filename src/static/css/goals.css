@@ -116,3 +116,35 @@
 .btn-create:hover {
     background: #059669;
 }
+
+.btn-stages {
+    background: #8b5cf6 !important;
+}
+
+.btn-stages:hover {
+    background: #7c3aed !important;
+}
+
+.editor-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.editor-buttons button {
+    flex: 1 1 auto;
+    min-width: 120px;
+}
+
+.goal-item {
+    padding: 10px;
+    border-radius: 8px;
+    background: #1e293b;
+    margin-bottom: 8px;
+    cursor: pointer;
+    border: 1px solid #91a3b8;
+}
+
+.goal-item:hover {
+    background: #334155;
+}

@@ -46,6 +46,9 @@ class CreateGoalStage(BaseModel):
     description: Optional[str] = None
     detailed_instructions: Optional[str] = None
 
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
     order_index: Optional[int] = None
     is_milestone: bool = False
 
@@ -59,6 +62,9 @@ class UpdateGoalStage(BaseModel):
     title: Optional[str] = Field(default=None, max_length=500)
     description: Optional[str] = None
     detailed_instructions: Optional[str] = None
+
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
     status: Optional[StageStatus] = None
     order_index: Optional[int] = None

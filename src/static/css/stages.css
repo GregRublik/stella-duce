@@ -1,0 +1,62 @@
+/* Контейнер: панель сбоку + canvas */
+#container {
+    display: flex;
+    height: calc(100vh - 60px); /* учитываем navbar */
+    width: 100vw;
+}
+
+/* Панель редактирования слева */
+.stage-editor {
+    width: 300px;
+    background: #1e293b;
+    color: white;
+    padding: 15px;
+    border-right: 1px solid #374151;
+    overflow-y: auto;
+}
+
+.stage-editor.hidden {
+    display: none;
+}
+
+.stage-editor input,
+.stage-editor textarea,
+.stage-editor select {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+/* Canvas справа от панели */
+#canvas {
+    flex-grow: 1;
+    background: #0f172a;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Стили стадий */
+.node {
+    position: absolute;
+    background: #6366f1;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: grab;
+    will-change: transform;
+}
+
+.node:hover {
+    transform: scale(1.05);
+}
+
+.node.selected {
+    background: #8b5cf6;
+    box-shadow: 0 0 15px rgba(139,92,246,0.6);
+}
+
+.stage-editor {
+    cursor: grab;
+}
+
+.stage-editor:active {
+    cursor: grabbing;
+}

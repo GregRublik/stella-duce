@@ -65,3 +65,25 @@ textarea {
     color: white;
     margin-top: 10px;
 }
+.stage-editor {
+    position: absolute;
+    right: 10px;
+    top: 80px;
+    background: #1e293b;
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    width: 250px;
+    z-index: 10;
+}
+
+.stage-editor.hidden {
+    display: none;
+}
+
+.stage-editor input,
+.stage-editor textarea,
+.stage-editor select {
+    width: 100%;
+    margin-bottom: 10px;
+}
