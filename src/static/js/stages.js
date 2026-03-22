@@ -11,15 +11,56 @@ let draggingStage = null;
 let offsetX = 0;
 let offsetY = 0;
 
-let connecting = false;
-let connectionLine = null;
-let connectionFrom = null;
 let selectedStage = null;
 
 let draggingEditor = false;
 let editorOffsetX = 0;
 let editorOffsetY = 0;
 
+let connecting = false;
+let connectionFrom = null;
+let connectionFromSide = null;
+let tempLine = null;
+
+function createPath(from, to) {
+    const dx = Math.abs(to.x - from.x) / 2;
+
+    return `
+        M ${from.x} ${from.y}
+        C ${from.x + dx} ${from.y},
+          ${to.x - dx} ${to.y},
+          ${to.x} ${to.y}
+    `;
+}
+
+function startConnection(stage, side, e) {
+    connecting = true;
+    connectionFrom = stage;
+    connectionFromSide = side;
+
+    tempLine = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    tempLine.setAttribute("stroke", "#6366f1");
+    tempLine.setAttribute("fill", "none");
+    tempLine.setAttribute("stroke-dasharray", "5,5");
+
+    svg.appendChild(tempLine);
+}
+
+function getAnchorPoint(stage, side) {
+    const el = nodesMap.get(stage.id);
+    const rect = el.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+
+    const cx = rect.left - canvasRect.left;
+    const cy = rect.top - canvasRect.top;
+
+    switch (side) {
+        case "top": return { x: cx + rect.width / 2, y: cy };
+        case "bottom": return { x: cx + rect.width / 2, y: cy + rect.height };
+        case "left": return { x: cx, y: cy + rect.height / 2 };
+        case "right": return { x: cx + rect.width, y: cy + rect.height / 2 };
+    }
+}
 
 function initEditorDrag() {
     const editor = document.getElementById("stage-editor");
@@ -81,7 +122,26 @@ function renderNodes() {
     stages.forEach(stage => {
         const div = document.createElement("div");
         div.className = "node";
-        div.innerText = stage.title;
+
+        const content = document.createElement("div");
+        content.className = "node-content";
+        content.innerText = stage.title;
+
+        div.appendChild(content);
+
+        // 4 точки
+        ["top", "right", "bottom", "left"].forEach(pos => {
+            const anchor = document.createElement("div");
+            anchor.className = "anchor anchor-" + pos;
+
+            anchor.onmousedown = (e) => {
+                e.stopPropagation();
+                e.stopImmediatePropagation(); // 🔥 ВАЖНО
+                startConnection(stage, pos, e);
+            };
+
+            div.appendChild(anchor);
+        });
 
         div.style.left = (stage.longitude || 100) + "px";
         div.style.top = (stage.latitude || 100) + "px";
@@ -89,12 +149,9 @@ function renderNodes() {
         // DRAG
         div.onmousedown = (e) => {
             e.preventDefault();
-            if (e.shiftKey) {
-                startConnection(stage, e);
-                return;
-            }
+
             draggingStage = stage;
-            const rect = canvas.getBoundingClientRect();
+
             offsetX = e.clientX - (stage.longitude || 0);
             offsetY = e.clientY - (stage.latitude || 0);
         };
@@ -180,7 +237,7 @@ async function init() {
     canvas.appendChild(svg);
 
     initSVGMarkers();
-    initEditorDrag(); // ← ВАЖНО
+    initEditorDrag();
 
     await loadStages();
 }
@@ -191,6 +248,7 @@ init();
 // загрузка
 async function loadStages() {
     stages = await request(`/editor/goals/${goalId}/stages`);
+    console.log(stages)
     renderNodes();
     drawConnections();
 }
@@ -199,7 +257,10 @@ async function loadStages() {
 
 // 🔗 ЛИНИИ (отдельно)
 function drawConnections() {
-    svg.innerHTML = "";
+    // очищаем только линии, но не marker
+    const paths = svg.querySelectorAll("path:not([data-marker])");
+    paths.forEach(p => p.remove());
+
 
     stages.forEach(stage => {
         stage.dependency_ids.forEach(dep => {
@@ -213,18 +274,17 @@ function drawConnections() {
 
 // линия
 function drawLine(from, to) {
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    const fromPoint = getAnchorPoint(from, "right");
+    const toPoint = getAnchorPoint(to, "left");
 
-    line.setAttribute("x1", from.longitude || 0);
-    line.setAttribute("y1", from.latitude || 0);
-    line.setAttribute("x2", to.longitude || 0);
-    line.setAttribute("y2", to.latitude || 0);
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
 
-    line.setAttribute("stroke", "#94a3b8");
-    line.setAttribute("stroke-width", "2");
-    line.setAttribute("marker-end", "url(#arrowhead)");
+    path.setAttribute("d", createPath(fromPoint, toPoint));
+    path.setAttribute("stroke", "#94a3b8");
+    path.setAttribute("fill", "none");
+    path.setAttribute("marker-end", "url(#arrowhead)");
 
-    svg.appendChild(line);
+    svg.appendChild(path);
 }
 
 // Добавляем стрелку в SVG один раз при инициализации
@@ -244,19 +304,16 @@ function initSVGMarkers() {
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", "M0,0 L10,3.5 L0,7 Z");
     path.setAttribute("fill", "#94a3b8");
+    path.setAttribute("data-marker", "true");
 
     marker.appendChild(path);
     defs.appendChild(marker);
     svg.appendChild(defs);
 }
 
-// в init()
-initSVGMarkers();
-
 // 🎯 ГЛОБАЛЬНЫЙ MOUSE MOVE
 document.onmousemove = (e) => {
 
-    // DRAG NODE
     if (draggingStage) {
         draggingStage.longitude = e.clientX - offsetX;
         draggingStage.latitude = e.clientY - offsetY;
@@ -268,71 +325,54 @@ document.onmousemove = (e) => {
         drawConnections();
     }
 
-    // DRAG CONNECTION
-    if (connecting && connectionLine) {
-        connectionLine.setAttribute("x2", e.clientX);
-        connectionLine.setAttribute("y2", e.clientY);
+    if (connecting && tempLine) {
+        const fromPoint = getAnchorPoint(connectionFrom, connectionFromSide);
+        const canvasRect = canvas.getBoundingClientRect();
+
+        const toPoint = {
+            x: e.clientX - canvasRect.left,
+            y: e.clientY - canvasRect.top
+        };
+        tempLine.setAttribute("d", createPath(fromPoint, toPoint));
     }
 };
 
 // 🛑 MOUSE UP
 document.onmouseup = async (e) => {
 
-    // сохранить координаты
+    // 📌 сначала сохраняем перетаскивание
     if (draggingStage) {
         await request(`/editor/goals/${goalId}/stages/${draggingStage.id}`, "PATCH", {
             latitude: draggingStage.latitude,
             longitude: draggingStage.longitude
         });
-
         draggingStage = null;
     }
 
-    // завершить связь
-    if (connecting) {
-        finishConnection(e);
-    }
-};
+    // 📌 если не режим соединения — выходим
+    if (!connecting) return;
 
-// 🔗 НАЧАЛО СОЕДИНЕНИЯ
-function startConnection(stage, e) {
-    connecting = true;
-    connectionFrom = stage;
-
-    connectionLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-
-    connectionLine.setAttribute("x1", stage.longitude);
-    connectionLine.setAttribute("y1", stage.latitude);
-    connectionLine.setAttribute("x2", e.clientX);
-    connectionLine.setAttribute("y2", e.clientY);
-
-    connectionLine.setAttribute("stroke", "#6366f1");
-    connectionLine.setAttribute("stroke-width", "2");
-    connectionLine.setAttribute("stroke-dasharray", "5,5");
-
-    svg.appendChild(connectionLine);
-}
-
-// 🔗 КОНЕЦ СОЕДИНЕНИЯ
-async function finishConnection(e) {
     connecting = false;
 
-    if (connectionLine) {
-        svg.removeChild(connectionLine);
-        connectionLine = null;
+    if (tempLine) {
+        svg.removeChild(tempLine);
+        tempLine = null;
     }
 
-    const target = document.elementFromPoint(e.clientX, e.clientY);
+    // ✅ ищем anchor ПОД курсором
+    const targetAnchor = document.elementFromPoint(e.clientX, e.clientY)?.closest(".anchor");
 
-    if (!target || !target.classList.contains("node")) return;
+    if (!targetAnchor) return;
 
-    const targetStage = [...nodesMap.entries()]
-        .find(([id, el]) => el === target)?.[0];
+    const targetNode = targetAnchor.closest(".node");
+    if (!targetNode) return;
 
-    if (!targetStage || targetStage === connectionFrom.id) return;
+    const targetStageId = [...nodesMap.entries()]
+        .find(([id, el]) => el === targetNode)?.[0];
 
-    const stage = stages.find(s => s.id === targetStage);
+    if (!targetStageId || targetStageId === connectionFrom.id) return;
 
+    const stage = stages.find(s => s.id === targetStageId);
     const deps = stage.dependency_ids || [];
 
     if (!deps.includes(connectionFrom.id)) {
@@ -342,7 +382,7 @@ async function finishConnection(e) {
 
         await loadStages();
     }
-}
+};
 
 // ➕ создание стадии
 canvas?.addEventListener("dblclick", async (e) => {

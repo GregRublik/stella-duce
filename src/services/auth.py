@@ -138,7 +138,8 @@ class AuthService:
 
     async def validate_refresh_token(self, token: str, token_id: str) -> bool:
         try:
-            token_db = await self.repository.get_by_id(self.uow.session, UUID(token_id))
+            async with self.uow:
+                token_db = await self.repository.get_by_id(self.uow.session, UUID(token_id))
 
             if token_db.is_expired:
                 return False
@@ -168,7 +169,8 @@ class AuthService:
 
     async def update_by_id(self, token: TokenUserUpdate) -> TokenUser:
         try:
-            return await self.repository.update_by_id(self.uow.session, token)
+            async with self.uow:
+                return await self.repository.update_by_id(self.uow.session, token)
         except NoResultFound:
             raise TokenUserNoFoundException
 

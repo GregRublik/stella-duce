@@ -45,22 +45,22 @@ class OTPService:
 
     async def add_otp(self, user: User, otp_type: OtpType = OtpType) -> str:
 
-        # Деактивируем старые OTP для пользователя и типа
-        await self.repository.deactivate_old_otps(self.uow.session, user.id, otp_type)
+        async with self.uow:
+            await self.repository.deactivate_old_otps(self.uow.session, user.id, otp_type)
 
-        # Генерируем новый OTP
-        otp = await self.generate_otp()
-        otp_hash = await self.hashing_otp(otp)
+            # Генерируем новый OTP
+            otp = await self.generate_otp()
+            otp_hash = await self.hashing_otp(otp)
 
-        data_otp = {
-            "user_id": user.id,
-            "otp_hash": otp_hash,
-            "type": otp_type,
-            "expires_at": datetime.now(timezone.utc) + timedelta(minutes=5)  # срок жизни OTP
-        }
+            data_otp = {
+                "user_id": user.id,
+                "otp_hash": otp_hash,
+                "type": otp_type,
+                "expires_at": datetime.now(timezone.utc) + timedelta(minutes=5)  # срок жизни OTP
+            }
 
-        await self.repository.add_one(self.uow.session, data_otp)
-        return otp
+            await self.repository.add_one(self.uow.session, data_otp)
+            return otp
 
     async def generate_and_send(self, user: User, otp_type: OtpType = OtpType.EMAIL_VERIFICATION):
         async with self.uow:
@@ -78,11 +78,11 @@ class OTPService:
             await self.notification_service.send_email_notification(otp_message)
 
     async def verify(self, user: User, otp_code: str) -> bool:
-
-        otp_entity = await self.repository.get_by_user_id(
-            self.uow.session,
-            user.id
-        )
+        async with self.uow:
+            otp_entity = await self.repository.get_by_user_id(
+                self.uow.session,
+                user.id
+            )
 
         if not otp_entity:
             return False

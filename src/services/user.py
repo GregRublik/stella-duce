@@ -30,18 +30,21 @@ class UserService:
 
     async def get_user_by_email(self, user: UserEmail) -> User:
         try:
-            return await self.repository.get_by_email(self.uow.session, user)
+            async with self.uow:
+                return await self.repository.get_by_email(self.uow.session, user)
         except ModelNoFoundException:
             raise UserNoFoundException
 
     async def get_user_by_id(self, user_id: int) -> User:
         try:
-            return await self.repository.get_by_id(self.uow.session, user_id)
+            async with self.uow:
+                return await self.repository.get_by_id(self.uow.session, user_id)
         except ModelNoFoundException:
             raise UserNoFoundException
 
     async def change_status_user(self, user_id: int, status: UserStatus) -> User:
         try:
-            return await self.repository.change_one(self.uow.session, user_id, {"status": status})
+            async with self.uow:
+                return await self.repository.change_one(self.uow.session, user_id, {"status": status})
         except ModelNoFoundException:
             raise UserNoFoundException

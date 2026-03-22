@@ -91,9 +91,9 @@ class GoalStageService:
 
     async def get_stages(self, user_id: int, goal_id: int) -> List[GoalStageResponse]:
         try:
-            await self._check_goal_owner(user_id, goal_id)
-
-            return await self.repository.get_by_goal_id(self.uow.session, goal_id)
+            async with self.uow:
+                await self._check_goal_owner(user_id, goal_id)
+                return await self.repository.get_by_goal_id(self.uow.session, goal_id)
 
         except GoalNoFoundException:
             raise
@@ -102,12 +102,9 @@ class GoalStageService:
 
     async def get_stage(self, user_id: int, goal_id: int, stage_id: int) -> GoalStageResponse:
         try:
-            await self._check_goal_owner(user_id, goal_id)
-
-            stage = await self.repository.get_by_id(
-                self.uow.session,
-                stage_id
-            )
+            async with self.uow:
+                await self._check_goal_owner(user_id, goal_id)
+                stage = await self.repository.get_by_id(self.uow.session, stage_id)
             if stage.goal_id != goal_id:
                 raise GoalStageNoFoundException
             return stage
@@ -116,18 +113,17 @@ class GoalStageService:
 
     async def delete_one(self, user_id: int, goal_id: int, stage_id: int):
         try:
-            await self._check_goal_owner(user_id, goal_id)
             async with self.uow:
+                await self._check_goal_owner(user_id, goal_id)
                 await self.repository.delete_by_id(self.uow.session, stage_id)
         except ModelNoFoundException:
             raise GoalStageNoFoundException
 
     async def add_stage(self, user_id: int, goal_id: int, stage_data: CreateGoalStage) -> GoalStage:
 
-        await self._check_goal_owner(user_id, goal_id)
         try:
             async with self.uow:
-
+                await self._check_goal_owner(user_id, goal_id)
                 data_dict = stage_data.model_dump(exclude_unset=True)
                 dependency_ids = data_dict.pop("dependency_ids", [])
                 data_dict["goal_id"] = goal_id
